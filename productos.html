@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productos — Vetra Shop</title>
+  <meta name="description" content="Catálogo completo de productos en Vetra Shop. Consulta por WhatsApp.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  
+  <!-- BARRA DE ANUNCIOS -->
+  <div class="marquesina">
+    <div class="marquesina-contenido">
+      <span>✨ Envíos a todo el país</span>
+      <span>•</span>
+      <span>💳 Paga al recibir</span>
+      <span>•</span>
+      <span>🔥 Nuevos productos cada semana</span>
+      <span>•</span>
+      <span>✨ Envíos a todo el país</span>
+      <span>•</span>
+      <span>💳 Paga al recibir</span>
+      <span>•</span>
+      <span>🔥 Nuevos productos cada semana</span>
+    </div>
+  </div>
+
+  <header>
+    <h1 class="logo"><a href="index.html">VETRA<span style="color:var(--color-acento)">·</span>SHOP</a></h1>
+    <nav>
+      <a href="productos.html">Productos</a>
+      <a href="favoritos.html">❤️ Favoritos</a>
+      <a href="https://wa.me/5354525901" target="_blank" class="btn-wa-nav">💬 WhatsApp</a>
+    </nav>
+  </header>
+
+  <main>
+    <h2 class="titulo-seccion" style="margin-top:2rem;">Nuestros productos</h2>
+
+    <div class="barra-controles">
+      <input type="search" id="buscador" class="buscador" placeholder="🔍 Buscar producto..." autocomplete="off">
+      <select id="orden" class="selector-orden">
+        <option value="recientes">Más recientes</option>
+        <option value="precio-asc">Menor precio</option>
+        <option value="precio-desc">Mayor precio</option>
+        <option value="nombre">Nombre (A-Z)</option>
+      </select>
+    </div>
+
+    <div id="filtros" class="filtros"></div>
+    <p id="contador-resultados" class="contador-resultados"></p>
+    <div id="catalogo" class="grid-productos" style="max-width:1200px;margin:auto;padding:0 2rem 3rem;"></div>
+  </main>
+
+  <footer>
+    <p>© 2026 Vetra Shop · Hecho con ❤️</p>
+  </footer>
+
+  <a href="https://wa.me/5354525901?text=Hola%2C%20quiero%20m%C3%A1s%20informaci%C3%B3n"
+     target="_blank" class="wa-flotante" aria-label="Contactar por WhatsApp">💬</a>
+
+  <!-- BARRA DE NAVEGACIÓN INFERIOR (Productos está activo) -->
+  <nav class="nav-inferior">
+    <a href="index.html" class="nav-item">
+      <span class="icono">🏠</span>
+      <span>Inicio</span>
+    </a>
+    <a href="productos.html" class="nav-item activo">
+      <span class="icono">👕</span>
+      <span>Productos</span>
+    </a>
+    <a href="favoritos.html" class="nav-item">
+      <span class="icono">❤️</span>
+      <span>Favoritos</span>
+    </a>
+  </nav>
+
+  <script src="js/datos.js"></script>
+  <script src="js/catalogo.js"></script>
+  <script src="js/efectos.js"></script>
+</body>
+</html>
