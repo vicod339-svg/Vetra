@@ -3,7 +3,6 @@ document.addEventListener("productosListos", () => {
   const p = productos.find(x => x.id === id);
   const cont = document.getElementById("detalle");
 
-  // Verificar si el producto existe y si su categoría no ha sido eliminada
   const idsCategoriasActivas = categorias.map(c => c.id);
   const esValido = p && idsCategoriasActivas.includes(p.categoria);
 
