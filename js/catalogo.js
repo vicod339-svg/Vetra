@@ -104,7 +104,5 @@ function renderizarCatalogo() {
   pintarProductos();
 }
 
+// ESTO ES LO QUE HACE QUE FUNCIONE:
 document.addEventListener("productosListos", renderizarCatalogo);
-if (productos && productos.length > 0) {
-  renderizarCatalogo();
-}
