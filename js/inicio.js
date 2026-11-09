@@ -1,5 +1,4 @@
-function renderizarInicio() {
-  // Categorías
+document.addEventListener("productosListos", () => {
   const contCat = document.getElementById("categorias");
   if (!contCat) return;
   contCat.innerHTML = ""; 
@@ -12,7 +11,6 @@ function renderizarInicio() {
     contCat.appendChild(a);
   });
 
-  // Destacados
   const contDest = document.getElementById("destacados");
   if (!contDest) return;
   contDest.innerHTML = ""; 
@@ -61,8 +59,4 @@ function renderizarInicio() {
   if (typeof aplicarAnimacionesScroll === "function") {
       aplicarAnimacionesScroll();
   }
-}
-
-// ESTO ES LO QUE HACE QUE FUNCIONE:
-// Escucha el aviso de datos.js y dibuja la página
-document.addEventListener("productosListos", renderizarInicio);
+});
