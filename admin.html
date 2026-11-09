@@ -61,7 +61,6 @@
     </nav>
   </header>
 
-  <!-- PANTALLA DE LOGIN CON TOKEN -->
   <div id="pantalla-login" class="login-container">
     <div class="login-box">
       <h2>Acceso Restringido</h2>
@@ -156,7 +155,7 @@
 
   <script>
     // ============================================
-    // CONFIGURACIÓN DE GITHUB
+    // CONFIGURACIÓN
     // ============================================
     const CLAVE_SECRETA = "Vetra2026!";
     const GITHUB_USER = "vicod339-svg";
@@ -166,11 +165,10 @@
     const BASE_IMG_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/img/`;
 
     let githubToken = "";
-    let fileSha = ""; // Necesario para actualizar el archivo
+    let fileSha = "";
     let productosAdmin = [];
     let categoriasAdmin = [];
 
-    // Variables del DOM
     const formProd = document.getElementById("form-producto");
     const formCat = document.getElementById("form-categoria");
     const listaProdDiv = document.getElementById("lista-admin");
@@ -181,9 +179,6 @@
     const previewCont = document.getElementById("preview-foto");
     const previewImg = document.getElementById("preview-img");
 
-    // ============================================
-    // LOGIN
-    // ============================================
     window.verificarLogin = function() {
       const pass = document.getElementById("input-password").value;
       const token = document.getElementById("input-token").value.trim();
@@ -212,27 +207,23 @@
     }
 
     // ============================================
-    // CONEXIÓN CON GITHUB (LEER)
+    // LEER DE GITHUB
     // ============================================
     async function cargarDatosDeGitHub() {
       try {
-        // Hacemos una petición a la API de GitHub para obtener el archivo datos.js actual
         const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ARCHIVO_DATOS}?ref=${GITHUB_BRANCH}`;
-        const res = await fetch(url, {
-          headers: { "Authorization": `token ${githubToken}` }
-        });
+        const res = await fetch(url, { headers: { "Authorization": `token ${githubToken}` } });
 
-        if (!res.ok) throw new Error("No se pudo leer el archivo de GitHub. Revisa tu Token.");
+        if (!res.ok) throw new Error("No se pudo leer el archivo. Revisa tu Token.");
 
         const data = await res.json();
-        fileSha = data.sha; // Guardamos el SHA para poder actualizar luego
+        fileSha = data.sha;
         
-        // El contenido viene en Base64, lo decodificamos
         const contenido = decodeURIComponent(escape(atob(data.content)));
         
-        // Extraemos los datos usando expresiones regulares (buscando el JSON dentro del texto)
-        const matchCat = contenido.match(/let categorias = (\[[\s\S]*?\]);/);
-        const matchProd = contenido.match(/let productos = (\[[\s\S]*?\]);/);
+        // Búsqueda tolerante a espacios y saltos de línea
+        const matchCat = contenido.match(/let categorias\s*=\s*(\[[\s\S]*?\]);/);
+        const matchProd = contenido.match(/let productos\s*=\s*(\[[\s\S]*?\]);/);
 
         if (matchCat) categoriasAdmin = JSON.parse(matchCat[1]);
         if (matchProd) productosAdmin = JSON.parse(matchProd[1]);
@@ -247,19 +238,18 @@
     }
 
     // ============================================
-    // CONEXIÓN CON GITHUB (GUARDAR)
+    // GUARDAR EN GITHUB
     // ============================================
     async function guardarEnGitHub() {
       try {
-        // Reconstruimos el archivo datos.js completo
-        const nuevoContenido = `
-const WHATSAPP = "5354525901"; 
+        // Formateamos el archivo con JSON.stringify para que siempre sea válido
+        const nuevoContenido = `const WHATSAPP = "5354525901"; 
 
 let categorias = ${JSON.stringify(categoriasAdmin, null, 2)};
 
 let productos = ${JSON.stringify(productosAdmin, null, 2)};
 
-// Helpers
+// HELPERS
 function formatearPrecio(p) {
   if (p.moneda === "CUP") return \`$\${p.precio.toFixed(2)} CUP\`;
   return \`$\${p.precio.toFixed(2)} USD\`;
@@ -298,11 +288,9 @@ function toggleFavorito(id) {
 document.dispatchEvent(new Event('productosListos'));
 `;
 
-        // Codificamos en Base64
         const contenidoBase64 = btoa(unescape(encodeURIComponent(nuevoContenido)));
-
-        // Hacemos el PUT a la API de GitHub
         const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ARCHIVO_DATOS}`;
+        
         const res = await fetch(url, {
           method: "PUT",
           headers: {
@@ -319,10 +307,9 @@ document.dispatchEvent(new Event('productosListos'));
 
         if (!res.ok) {
           const errData = await res.json();
-          throw new Error(errData.message || "Error al guardar en GitHub");
+          throw new Error(errData.message || "Error al guardar");
         }
         
-        // Actualizamos el SHA para la próxima vez
         const resData = await res.json();
         fileSha = resData.content.sha;
 
@@ -405,7 +392,7 @@ document.dispatchEvent(new Event('productosListos'));
     }
 
     // ============================================
-    // EVENTOS DE PRODUCTOS Y CATEGORÍAS
+    // EVENTOS
     // ============================================
     window.eliminarCategoria = function(id) {
       if (confirm("¿Eliminar categoría? Los productos se ocultarán.")) {
@@ -445,7 +432,7 @@ document.dispatchEvent(new Event('productosListos'));
       }
 
       guardarEnGitHub().then(() => {
-        limpiarCatForm(); renderizarListaCat(); actualizarSelectCategorias(); alert("Categoría guardada en GitHub.");
+        limpiarCatForm(); renderizarListaCat(); actualizarSelectCategorias(); alert("Categoría guardada.");
       });
     });
 
@@ -542,16 +529,10 @@ document.dispatchEvent(new Event('productosListos'));
       });
     });
 
-    // ============================================
-    // RECUPERAR SESIÓN
-    // ============================================
     document.addEventListener("DOMContentLoaded", () => {
       const auth = sessionStorage.getItem("vetraAuth");
       const token = sessionStorage.getItem("vetraToken");
-      if (auth === "true" && token) {
-        githubToken = token;
-        mostrarPanel();
-      }
+      if (auth === "true" && token) { githubToken = token; mostrarPanel(); }
     });
   </script>
 </body>
