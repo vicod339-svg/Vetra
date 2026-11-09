@@ -129,7 +129,7 @@
           <div class="form-group"><label>Tallas (coma)</label><input type="text" id="prod-tallas" placeholder="S, M, L"></div>
           <div class="form-group"><label>Colores (coma)</label><input type="text" id="prod-colores" placeholder="Rojo, Azul"></div>
         </div>
-        <button type="submit" class="btn-guardar">Guardar Producto (en GitHub)</button>
+        <button type="submit" class="btn-guardar">Guardar Producto (en datos.js)</button>
         <button type="button" id="btn-cancelar" style="display:none; width:100%; margin-top:0.5rem; background:#eee; color:#333; border:none; padding:1rem; border-radius:var(--radio-btn); font-weight:600; cursor:pointer;" onclick="limpiarFormulario()">Cancelar Edición</button>
       </form>
     </div>
@@ -154,14 +154,12 @@
   </main>
 
   <script>
-    // ============================================
     // CONFIGURACIÓN
-    // ============================================
     const CLAVE_SECRETA = "Vetra2026!";
     const GITHUB_USER = "vicod339-svg";
     const GITHUB_REPO = "Vetra";
     const GITHUB_BRANCH = "main";
-    const ARCHIVO_DATOS = "js/datos.js";
+    const ARCHIVO_DATOS = "js/datos.js"; // ¡Volvemos al datos.js!
     const BASE_IMG_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/img/`;
 
     let githubToken = "";
@@ -206,9 +204,7 @@
       cargarDatosDeGitHub();
     }
 
-    // ============================================
-    // LEER DE GITHUB
-    // ============================================
+    // LEER EL DATOS.JS ORIGINAL
     async function cargarDatosDeGitHub() {
       try {
         const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ARCHIVO_DATOS}?ref=${GITHUB_BRANCH}`;
@@ -221,7 +217,7 @@
         
         const contenido = decodeURIComponent(escape(atob(data.content)));
         
-        // Búsqueda tolerante a espacios y saltos de línea
+        // Buscar las variables en el texto del datos.js
         const matchCat = contenido.match(/let categorias\s*=\s*(\[[\s\S]*?\]);/);
         const matchProd = contenido.match(/let productos\s*=\s*(\[[\s\S]*?\]);/);
 
@@ -237,12 +233,10 @@
       }
     }
 
-    // ============================================
-    // GUARDAR EN GITHUB
-    // ============================================
+    // REESCRIBIR EL DATOS.JS
     async function guardarEnGitHub() {
       try {
-        // Formateamos el archivo con JSON.stringify para que siempre sea válido
+        // Reconstruimos el archivo datos.js completo para que la tienda lo lea
         const nuevoContenido = `const WHATSAPP = "5354525901"; 
 
 let categorias = ${JSON.stringify(categoriasAdmin, null, 2)};
@@ -318,9 +312,7 @@ document.dispatchEvent(new Event('productosListos'));
       }
     }
 
-    // ============================================
     // LÓGICA DE LA INTERFAZ
-    // ============================================
     window.actualizarPreview = function() {
       const nombre = inputImgs.value.split(",")[0].trim();
       if (nombre === "") { previewCont.style.display = "none"; return; }
@@ -391,9 +383,6 @@ document.dispatchEvent(new Event('productosListos'));
       });
     }
 
-    // ============================================
-    // EVENTOS
-    // ============================================
     window.eliminarCategoria = function(id) {
       if (confirm("¿Eliminar categoría? Los productos se ocultarán.")) {
         categoriasAdmin = categoriasAdmin.filter(c => c.id !== id);
@@ -525,7 +514,7 @@ document.dispatchEvent(new Event('productosListos'));
       }
 
       guardarEnGitHub().then(() => {
-        limpiarFormulario(); renderizarListaProd(); alert("¡Producto guardado en GitHub!");
+        limpiarFormulario(); renderizarListaProd(); alert("¡Producto guardado en datos.js!");
       });
     });
 
