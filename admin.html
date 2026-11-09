@@ -64,13 +64,10 @@
   <div id="pantalla-login" class="login-container">
     <div class="login-box">
       <h2>Acceso Restringido</h2>
-      <p>Introduce la contraseña y tu Token de GitHub.</p>
-      <div id="error-login" class="login-error">Datos incorrectos.</div>
-      
-      <input type="password" id="input-password" placeholder="Contraseña de Admin" style="margin-bottom: 10px;">
-      <input type="password" id="input-token" placeholder="Token de GitHub (ghp_...)" style="margin-bottom: 15px; letter-spacing: normal; text-align: left; font-size: 0.9rem;">
-      
-      <button onclick="verificarLogin()">Entrar al Panel</button>
+      <p>Introduce la contraseña de administrador.</p>
+      <div id="error-login" class="login-error">Contraseña incorrecta. Intenta de nuevo.</div>
+      <input type="password" id="input-password" placeholder="••••••••" onkeypress="if(event.key === 'Enter') verificarPassword()">
+      <button onclick="verificarPassword()">Entrar al Panel</button>
     </div>
   </div>
 
@@ -129,7 +126,7 @@
           <div class="form-group"><label>Tallas (coma)</label><input type="text" id="prod-tallas" placeholder="S, M, L"></div>
           <div class="form-group"><label>Colores (coma)</label><input type="text" id="prod-colores" placeholder="Rojo, Azul"></div>
         </div>
-        <button type="submit" class="btn-guardar">Guardar Producto (en datos.js)</button>
+        <button type="submit" class="btn-guardar">Guardar Producto</button>
         <button type="button" id="btn-cancelar" style="display:none; width:100%; margin-top:0.5rem; background:#eee; color:#333; border:none; padding:1rem; border-radius:var(--radio-btn); font-weight:600; cursor:pointer;" onclick="limpiarFormulario()">Cancelar Edición</button>
       </form>
     </div>
@@ -153,20 +150,31 @@
 
   </main>
 
-  <script>
-    // CONFIGURACIÓN
-    const CLAVE_SECRETA = "Vetra2026!";
-    const GITHUB_USER = "vicod339-svg";
-    const GITHUB_REPO = "Vetra";
-    const GITHUB_BRANCH = "main";
-    const ARCHIVO_DATOS = "js/datos.js"; // ¡Volvemos al datos.js!
-    const BASE_IMG_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/img/`;
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    let githubToken = "";
-    let fileSha = "";
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjuNIn7LCeP6QFIFU2LuELsU6SbdAGFnk",
+      authDomain: "vetrashop.firebaseapp.com",
+      databaseURL: "https://vetrashop-default-rtdb.firebaseio.com",
+      projectId: "vetrashop",
+      storageBucket: "vetrashop.firebasestorage.app",
+      messagingSenderId: "612577114697",
+      appId: "1:612577114697:web:7a9d1a97ae8f4c750f5d98"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbProductosRef = ref(db, 'productos');
+    const dbCategoriasRef = ref(db, 'categorias');
+
+    const CLAVE_SECRETA = "Vetra2026!"; 
+    const BASE_IMG_URL = "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/";
+
     let productosAdmin = [];
     let categoriasAdmin = [];
-
+    
     const formProd = document.getElementById("form-producto");
     const formCat = document.getElementById("form-categoria");
     const listaProdDiv = document.getElementById("lista-admin");
@@ -177,142 +185,6 @@
     const previewCont = document.getElementById("preview-foto");
     const previewImg = document.getElementById("preview-img");
 
-    window.verificarLogin = function() {
-      const pass = document.getElementById("input-password").value;
-      const token = document.getElementById("input-token").value.trim();
-
-      if (pass === CLAVE_SECRETA && token.startsWith("ghp_")) {
-        githubToken = token;
-        sessionStorage.setItem("vetraAuth", "true");
-        sessionStorage.setItem("vetraToken", token);
-        mostrarPanel();
-      } else {
-        document.getElementById("error-login").style.display = "block";
-      }
-    };
-
-    window.cerrarSesion = function() {
-      sessionStorage.removeItem("vetraAuth");
-      sessionStorage.removeItem("vetraToken");
-      location.reload();
-    };
-
-    function mostrarPanel() {
-      document.getElementById("pantalla-login").style.display = "none";
-      document.getElementById("pantalla-admin").style.display = "block";
-      document.getElementById("btn-salir").style.display = "block";
-      cargarDatosDeGitHub();
-    }
-
-    // LEER EL DATOS.JS ORIGINAL
-    async function cargarDatosDeGitHub() {
-      try {
-        const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ARCHIVO_DATOS}?ref=${GITHUB_BRANCH}`;
-        const res = await fetch(url, { headers: { "Authorization": `token ${githubToken}` } });
-
-        if (!res.ok) throw new Error("No se pudo leer el archivo. Revisa tu Token.");
-
-        const data = await res.json();
-        fileSha = data.sha;
-        
-        const contenido = decodeURIComponent(escape(atob(data.content)));
-        
-        // Buscar las variables en el texto del datos.js
-        const matchCat = contenido.match(/let categorias\s*=\s*(\[[\s\S]*?\]);/);
-        const matchProd = contenido.match(/let productos\s*=\s*(\[[\s\S]*?\]);/);
-
-        if (matchCat) categoriasAdmin = JSON.parse(matchCat[1]);
-        if (matchProd) productosAdmin = JSON.parse(matchProd[1]);
-
-        renderizarListaProd();
-        renderizarListaCat();
-        actualizarSelectCategorias();
-
-      } catch (error) {
-        alert("Error al cargar desde GitHub: " + error.message);
-      }
-    }
-
-    // REESCRIBIR EL DATOS.JS
-    async function guardarEnGitHub() {
-      try {
-        // Reconstruimos el archivo datos.js completo para que la tienda lo lea
-        const nuevoContenido = `const WHATSAPP = "5354525901"; 
-
-let categorias = ${JSON.stringify(categoriasAdmin, null, 2)};
-
-let productos = ${JSON.stringify(productosAdmin, null, 2)};
-
-// HELPERS
-function formatearPrecio(p) {
-  if (p.moneda === "CUP") return \`$\${p.precio.toFixed(2)} CUP\`;
-  return \`$\${p.precio.toFixed(2)} USD\`;
-}
-
-function linkWhatsApp(producto, extra = "") {
-  const precioTexto = formatearPrecio(producto);
-  const msg = \`Hola, me interesa: \${producto.nombre}\${extra} (\${precioTexto})\`;
-  return \`https://wa.me/\${WHATSAPP}?text=\${encodeURIComponent(msg)}\`;
-}
-
-function textoStock(p) {
-  if (!p.disponible || p.stock === 0) return "❌ Agotado";
-  if (p.stock <= 5) return \`🔥 ¡Solo quedan \${p.stock}!\`;
-  return "✅ Disponible";
-}
-
-function claseStock(p) {
-  if (!p.disponible || p.stock === 0) return "agotado";
-  if (p.stock <= 5) return "poco-stock";
-  return "disponible";
-}
-
-function obtenerFavoritos() {
-  const guardados = localStorage.getItem("favoritos");
-  return guardados ? JSON.parse(guardados) : [];
-}
-function guardarFavoritos(lista) { localStorage.setItem("favoritos", JSON.stringify(lista)); }
-function toggleFavorito(id) {
-  let favs = obtenerFavoritos();
-  if (favs.includes(id)) favs = favs.filter(favId => favId !== id);
-  else favs.push(id);
-  guardarFavoritos(favs);
-}
-
-document.dispatchEvent(new Event('productosListos'));
-`;
-
-        const contenidoBase64 = btoa(unescape(encodeURIComponent(nuevoContenido)));
-        const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${ARCHIVO_DATOS}`;
-        
-        const res = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Authorization": `token ${githubToken}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            message: "Actualización desde Panel Admin",
-            content: contenidoBase64,
-            sha: fileSha,
-            branch: GITHUB_BRANCH
-          })
-        });
-
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.message || "Error al guardar");
-        }
-        
-        const resData = await res.json();
-        fileSha = resData.content.sha;
-
-      } catch (error) {
-        alert("Error al guardar en GitHub: " + error.message);
-      }
-    }
-
-    // LÓGICA DE LA INTERFAZ
     window.actualizarPreview = function() {
       const nombre = inputImgs.value.split(",")[0].trim();
       if (nombre === "") { previewCont.style.display = "none"; return; }
@@ -325,6 +197,39 @@ document.dispatchEvent(new Event('productosListos'));
       previewCont.style.display = "flex";
     };
     selectExt.addEventListener("change", actualizarPreview);
+
+    window.verificarPassword = function() {
+      if (document.getElementById("input-password").value === CLAVE_SECRETA) {
+        sessionStorage.setItem("vetraAdminAuth", "true");
+        mostrarPanel();
+      } else {
+        document.getElementById("error-login").style.display = "block";
+      }
+    };
+
+    window.cerrarSesion = function() {
+      sessionStorage.removeItem("vetraAdminAuth");
+      location.reload();
+    };
+
+    function mostrarPanel() {
+      document.getElementById("pantalla-login").style.display = "none";
+      document.getElementById("pantalla-admin").style.display = "block";
+      document.getElementById("btn-salir").style.display = "block";
+      
+      onValue(dbProductosRef, (snapshot) => {
+        const data = snapshot.val();
+        productosAdmin = data ? Object.values(data) : []; 
+        renderizarListaProd();
+      });
+
+      onValue(dbCategoriasRef, (snapshot) => {
+        const data = snapshot.val();
+        categoriasAdmin = data ? Object.values(data) : [];
+        renderizarListaCat();
+        actualizarSelectCategorias();
+      });
+    }
 
     function actualizarSelectCategorias() {
       selectCat.innerHTML = "";
@@ -384,9 +289,9 @@ document.dispatchEvent(new Event('productosListos'));
     }
 
     window.eliminarCategoria = function(id) {
-      if (confirm("¿Eliminar categoría? Los productos se ocultarán.")) {
+      if (confirm("¿Eliminar categoría?")) {
         categoriasAdmin = categoriasAdmin.filter(c => c.id !== id);
-        guardarEnGitHub().then(() => { renderizarListaCat(); actualizarSelectCategorias(); });
+        set(dbCategoriasRef, categoriasAdmin);
       }
     };
 
@@ -420,15 +325,15 @@ document.dispatchEvent(new Event('productosListos'));
         categoriasAdmin.push(nuevaCat);
       }
 
-      guardarEnGitHub().then(() => {
-        limpiarCatForm(); renderizarListaCat(); actualizarSelectCategorias(); alert("Categoría guardada.");
+      set(dbCategoriasRef, categoriasAdmin).then(() => {
+        limpiarCatForm(); alert("Categoría guardada.");
       });
     });
 
     window.eliminarProducto = function(id) {
       if (confirm("¿Eliminar producto?")) {
         productosAdmin = productosAdmin.filter(p => p.id !== id);
-        guardarEnGitHub().then(() => renderizarListaProd());
+        set(dbProductosRef, productosAdmin);
       }
     };
 
@@ -513,15 +418,13 @@ document.dispatchEvent(new Event('productosListos'));
         productosAdmin.push(nuevoProducto);
       }
 
-      guardarEnGitHub().then(() => {
-        limpiarFormulario(); renderizarListaProd(); alert("¡Producto guardado en datos.js!");
+      set(dbProductosRef, productosAdmin).then(() => {
+        limpiarFormulario(); alert("¡Producto guardado!");
       });
     });
 
     document.addEventListener("DOMContentLoaded", () => {
-      const auth = sessionStorage.getItem("vetraAuth");
-      const token = sessionStorage.getItem("vetraToken");
-      if (auth === "true" && token) { githubToken = token; mostrarPanel(); }
+      if (sessionStorage.getItem("vetraAdminAuth") === "true") mostrarPanel();
     });
   </script>
 </body>
