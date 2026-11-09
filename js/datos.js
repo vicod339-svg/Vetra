@@ -8,7 +8,27 @@ let categorias = [
   }
 ];
 
-let productos = [];
+let productos = [
+  {
+    "id": 1794256973536,
+    "nombre": "Pan",
+    "precio": 40,
+    "moneda": "USD",
+    "categoria": "comida",
+    "stock": 7,
+    "badge": "NUEVO",
+    "disponible": true,
+    "imgs": [
+      "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/Pan.jpg"
+    ],
+    "descripcion": "Pan",
+    "variantes": {
+      "tallas": [
+        "S"
+      ]
+    }
+  }
+];
 
 // HELPERS
 function formatearPrecio(p) {
