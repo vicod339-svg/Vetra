@@ -1,73 +1,65 @@
-// ============================================
-// CONFIGURACIÓN — EDITA AQUÍ TU WHATSAPP
-// ============================================
 const WHATSAPP = "5354525901"; 
 
-// ============================================
-// CATEGORÍAS
-// ============================================
-const categorias = [
+// Categorías por defecto (solo se usan si la base de datos está vacía)
+let categorias = [
   { id: "ropa", nombre: "Ropa", icono: "👕" },
   { id: "belleza", nombre: "Belleza", icono: "💄" },
   { id: "electrodomesticos", nombre: "Electrodomésticos", icono: "🔌" },
 ];
 
-// ============================================
-// PRODUCTOS
-// ============================================
-const productos = [
-  {
-    id: 1,
-    nombre: "Camiseta Oversize",
-    categoria: "ropa",
-    precio: 18.00,
-    imgs: ["img/camiseta-1.jpg", "img/camiseta-2.jpg"],
-    disponible: true,
-    stock: 5,
-    badge: "NUEVO", // <-- Etiqueta visual
-    descripcion: "Camiseta de algodón 100%, corte holgado.",
-    variantes: { tallas: ["S", "M", "L"], colores: ["Blanco", "Negro"] }
-  },
-  {
-    id: 2,
-    nombre: "Gloss Labial Hidratante",
-    categoria: "belleza",
-    precio: 9.50,
-    imgs: ["img/labial.jpg"],
-    disponible: true,
-    stock: 12,
-    badge: "OFERTA", // <-- Etiqueta visual
-    descripcion: "Brillo intenso con ácido hialurónico.",
-    variantes: { colores: ["Transparente", "Rosa"] }
-  },
-  {
-    id: 3,
-    nombre: "Jeans Mom Fit",
-    categoria: "ropa",
-    precio: 28.00,
-    imgs: ["img/jeans-1.jpg", "img/jeans-2.jpg"],
-    disponible: true,
-    stock: 2,
-    descripcion: "Mezclilla de alta calidad, tiro alto.",
-    variantes: { tallas: ["26", "28", "30"], colores: ["Azul"] }
-  },
-  {
-    id: 4,
-    nombre: "Secador Profesional 2000W",
-    categoria: "electrodomesticos",
-    precio: 45.00,
-    imgs: ["img/secador.jpg"],
-    disponible: false,
-    stock: 0,
-    descripcion: "Secador iónico con 3 temperaturas."
-  }
-];
+let productos = [];
+
+async function cargarDatos() {
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+  const { getDatabase, ref, onValue } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js");
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjuNIn7LCeP6QFIFU2LuELsU6SbdAGFnk",
+    authDomain: "vetrashop.firebaseapp.com",
+    databaseURL: "https://vetrashop-default-rtdb.firebaseio.com",
+    projectId: "vetrashop",
+    storageBucket: "vetrashop.firebasestorage.app",
+    messagingSenderId: "612577114697",
+    appId: "1:612577114697:web:7a9d1a97ae8f4c750f5d98"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Escuchar Categorías
+  const catRef = ref(db, 'categorias');
+  onValue(catRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) categorias = data;
+    document.dispatchEvent(new Event('productosListos'));
+  });
+
+  // Escuchar Productos
+  const prodRef = ref(db, 'productos');
+  onValue(prodRef, (snapshot) => {
+    const data = snapshot.val();
+    productos = data ? data : [];
+    document.dispatchEvent(new Event('productosListos'));
+  });
+}
+
+cargarDatos();
 
 // ============================================
-// Helpers generales
+// FORMATEO DE PRECIOS 
 // ============================================
+function formatearPrecio(p) {
+  // Si el producto tiene moneda CUP, mostramos $150.00 CUP
+  if (p.moneda === "CUP") {
+    return `$${p.precio.toFixed(2)} CUP`;
+  }
+  // Si es USD (o no tiene moneda asignada), mostramos $15.00 USD
+  return `$${p.precio.toFixed(2)} USD`;
+}
+
 function linkWhatsApp(producto, extra = "") {
-  const msg = `Hola, me interesa: ${producto.nombre}${extra} ($${producto.precio.toFixed(2)})`;
+  const precioTexto = formatearPrecio(producto);
+  const msg = `Hola, me interesa: ${producto.nombre}${extra} (${precioTexto})`;
   return `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 }
 
@@ -83,24 +75,14 @@ function claseStock(p) {
   return "disponible";
 }
 
-// ============================================
-// Lógica de Favoritos (localStorage)
-// ============================================
 function obtenerFavoritos() {
   const guardados = localStorage.getItem("favoritos");
   return guardados ? JSON.parse(guardados) : [];
 }
-
-function guardarFavoritos(lista) {
-  localStorage.setItem("favoritos", JSON.stringify(lista));
-}
-
+function guardarFavoritos(lista) { localStorage.setItem("favoritos", JSON.stringify(lista)); }
 function toggleFavorito(id) {
   let favs = obtenerFavoritos();
-  if (favs.includes(id)) {
-    favs = favs.filter(favId => favId !== id);
-  } else {
-    favs.push(id);
-  }
+  if (favs.includes(id)) favs = favs.filter(favId => favId !== id);
+  else favs.push(id);
   guardarFavoritos(favs);
 }
