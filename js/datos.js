@@ -4,7 +4,7 @@ const WHATSAPP = "5354525901";
 let categorias = [
   {
     "id": "comida",
-    "nombre": "Comida",
+    "nombre": "Comido",
     "icono": "🇨🇺"
   }
 ];
