@@ -1,32 +1,47 @@
 const WHATSAPP = "5354525901"; 
 
 let categorias = [
-  {
-    "id": "comida",
-    "nombre": "Comida",
-    "icono": "🥡"
-  }
+  { id: "ropa", nombre: "Ropa", icono: "👕" },
+  { id: "belleza", nombre: "Belleza", icono: "💄" },
+  { id: "electrodomesticos", nombre: "Electrodomésticos", icono: "🔌" },
 ];
 
-let productos = [
-  {
-    "id": 1794257565733,
-    "nombre": "Pan",
-    "precio": 50,
-    "moneda": "USD",
-    "categoria": "comida",
-    "stock": 9,
-    "badge": "",
-    "disponible": true,
-    "imgs": [
-      "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/Pan.jpg"
-    ],
-    "descripcion": "Pan",
-    "variantes": null
-  }
-];
+let productos = [];
 
-// HELPERS
+async function cargarDatos() {
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+  const { getDatabase, ref, onValue } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js");
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAjuNIn7LCeP6QFIFU2LuELsU6SbdAGFnk",
+    authDomain: "vetrashop.firebaseapp.com",
+    databaseURL: "https://vetrashop-default-rtdb.firebaseio.com",
+    projectId: "vetrashop",
+    storageBucket: "vetrashop.firebasestorage.app",
+    messagingSenderId: "612577114697",
+    appId: "1:612577114697:web:7a9d1a97ae8f4c750f5d98"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  const catRef = ref(db, 'categorias');
+  onValue(catRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) categorias = Object.values(data); 
+    
+    const prodRef = ref(db, 'productos');
+    onValue(prodRef, (snapshotProd) => {
+      const dataProd = snapshotProd.val();
+      productos = dataProd ? Object.values(dataProd) : [];
+      
+      document.dispatchEvent(new Event('productosListos'));
+    });
+  });
+}
+
+cargarDatos();
+
 function formatearPrecio(p) {
   if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
   return `$${p.precio.toFixed(2)} USD`;
@@ -61,5 +76,3 @@ function toggleFavorito(id) {
   else favs.push(id);
   guardarFavoritos(favs);
 }
-
-document.dispatchEvent(new Event('productosListos'));
