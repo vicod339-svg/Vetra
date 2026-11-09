@@ -1,21 +1,17 @@
+
 const WHATSAPP = "5354525901"; 
 
-// Los productos y categorías ahora se leerán directamente de este archivo
-// El panel de admin reescribirá estas líneas cuando guardes cambios.
-
 let categorias = [
-  { id: "ropa", nombre: "Ropa", icono: "👕" },
-  { id: "belleza", nombre: "Belleza", icono: "💄" },
-  { id: "electrodomesticos", nombre: "Electrodomésticos", icono: "🔌" },
+  {
+    "id": "comida",
+    "nombre": "Comida",
+    "icono": "🥡"
+  }
 ];
 
-let productos = [
-  // Aquí irán tus productos. El admin los gestionará por ti.
-];
+let productos = [];
 
-// ============================================
-// HELPERS (No tocar, el admin los usa)
-// ============================================
+// Helpers
 function formatearPrecio(p) {
   if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
   return `$${p.precio.toFixed(2)} USD`;
@@ -51,5 +47,4 @@ function toggleFavorito(id) {
   guardarFavoritos(favs);
 }
 
-// ¡Magia! Le avisamos a la página que los datos ya están listos
 document.dispatchEvent(new Event('productosListos'));
