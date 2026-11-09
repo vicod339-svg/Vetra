@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Seguro — Vetra Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .admin-container { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    .panel { background: var(--color-superficie); padding: 1.5rem; border-radius: var(--radio-tarjeta); box-shadow: var(--sombra-media); margin-bottom: 2rem; }
+    .panel h2 { margin-bottom: 1rem; color: var(--color-primario); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
+    .form-group label { font-weight: 600; font-size: 0.9rem; }
+    .form-group input, .form-group select, .form-group textarea { padding: 0.8rem; border: 1px solid var(--color-borde); border-radius: var(--radio-btn); font-family: inherit; font-size: 1rem; width: 100%; }
+    .form-group input:focus, .form-group textarea:focus { border-color: var(--color-acento); outline: none; }
+    
+    .foto-input-group { display: flex; gap: 0.5rem; }
+    .foto-input-group input { flex: 1; }
+    .foto-input-group select { width: auto; cursor: pointer; font-weight: 600; background-color: #f0f0f0; }
+    .preview-container { margin-top: 0.5rem; display: none; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--color-texto-suave); }
+    .preview-container img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
+
+    .lista-productos, .lista-categorias { display: flex; flex-direction: column; gap: 1rem; }
+    .item-producto, .item-categoria { display: flex; flex-direction: column; gap: 1rem; padding: 1rem; border: 1px solid var(--color-borde); border-radius: var(--radio-btn); background: #fafafa; }
+    .item-producto .img-info { display: flex; align-items: center; gap: 1rem; }
+    .item-producto img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; background: #eee; }
+    .item-producto .info, .item-categoria .info { flex: 1; }
+    .item-producto h3, .item-categoria h3 { font-size: 1rem; margin-bottom: 0.2rem; }
+    .item-producto p, .item-categoria p { font-size: 0.85rem; color: var(--color-texto-suave); }
+    .acciones-producto { display: flex; gap: 0.5rem; width: 100%; }
+    .btn-peligro { flex: 1; background: #ffe5e5; color: #c62828; border: 1px solid #ffcdcd; padding: 0.6rem; border-radius: var(--radio-btn); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
+    .btn-editar { flex: 1; background: #e5f0ff; color: #1e40af; border: 1px solid #cddfff; padding: 0.6rem; border-radius: var(--radio-btn); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: 0.2s; }
+    .btn-guardar { background: var(--color-primario); color: #fff; padding: 1rem; border: none; border-radius: var(--radio-btn); font-weight: 600; cursor: pointer; width: 100%; margin-top: 1rem; font-size: 1rem; }
+    
+    .login-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
+    .login-box { background: var(--color-superficie); padding: 2.5rem; border-radius: var(--radio-tarjeta); box-shadow: var(--sombra-fuerte); width: 100%; max-width: 400px; text-align: center; }
+    .login-box h2 { margin-bottom: 0.5rem; }
+    .login-box p { color: var(--color-texto-suave); margin-bottom: 2rem; font-size: 0.9rem; }
+    .login-box input { width: 100%; padding: 1rem; border: 1px solid var(--color-borde); border-radius: var(--radio-btn); margin-bottom: 1rem; font-size: 1rem; text-align: center; letter-spacing: 2px; }
+    .login-box button { width: 100%; padding: 1rem; background: var(--color-primario); color: #fff; border: none; border-radius: var(--radio-btn); font-weight: 600; cursor: pointer; font-size: 1rem; }
+    .login-error { color: var(--color-agotado); font-size: 0.9rem; margin-bottom: 1rem; display: none; }
+    
+    @media (min-width: 700px) { 
+      .form-grid { grid-template-columns: 1fr 1fr; } 
+      .item-producto, .item-categoria { flex-direction: row; align-items: center; }
+      .acciones-producto { width: auto; flex-direction: row; }
+      .btn-peligro, .btn-editar { flex: none; padding: 0.5rem 1rem; }
+    }
+    @media (max-width: 700px) { .form-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body style="padding-bottom: 0;">
+
+  <header>
+    <h1 class="logo">VETRA<span style="color:var(--color-acento)">·</span>ADMIN</h1>
+    <nav>
+      <a href="index.html">Volver a la tienda</a>
+      <a href="#" id="btn-salir" style="display:none; color: var(--color-agotado);" onclick="cerrarSesion()">Cerrar Sesión</a>
+    </nav>
+  </header>
+
+  <div id="pantalla-login" class="login-container">
+    <div class="login-box">
+      <h2>Acceso Restringido</h2>
+      <p>Introduce la contraseña de administrador.</p>
+      <div id="error-login" class="login-error">Contraseña incorrecta. Intenta de nuevo.</div>
+      <input type="password" id="input-password" placeholder="••••••••" onkeypress="if(event.key === 'Enter') verificarPassword()">
+      <button onclick="verificarPassword()">Entrar al Panel</button>
+    </div>
+  </div>
+
+  <main id="pantalla-admin" class="admin-container" style="display: none;">
+    
+    <!-- SECCIÓN: FORMULARIO PRODUCTO -->
+    <div class="panel">
+      <h2 id="titulo-formulario">Añadir Nuevo Producto</h2>
+      <form id="form-producto">
+        <input type="hidden" id="prod-id">
+        <div class="form-grid">
+          <div class="form-group"><label>Nombre</label><input type="text" id="prod-nombre" required></div>
+          <div class="form-grid" style="gap:0.5rem;">
+            <div class="form-group"><label>Precio</label><input type="number" step="0.01" id="prod-precio" required></div>
+            <div class="form-group"><label>Moneda</label>
+              <select id="prod-moneda">
+                <option value="USD">USD ($)</option>
+                <option value="CUP">CUP (CUP)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="prod-categoria"></select>
+          </div>
+          <div class="form-group"><label>Stock</label><input type="number" id="prod-stock" required></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group"><label>Etiqueta (opcional)</label><input type="text" id="prod-badge" placeholder="Ej: NUEVO"></div>
+          <div class="form-group">
+            <label>Estado</label>
+            <select id="prod-disponible"><option value="true">Disponible</option><option value="false">Agotado</option></select>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Nombre de la foto (sin extensión)</label>
+          <div class="foto-input-group">
+            <input type="text" id="prod-imgs" placeholder="Ej: blusa-roja" required oninput="actualizarPreview()">
+            <select id="prod-extension">
+              <option value=".jpg">.jpg</option>
+              <option value=".png">.png</option>
+              <option value=".jpeg">.jpeg</option>
+              <option value=".webp">.webp</option>
+              <option value=".gif">.gif</option>
+            </select>
+          </div>
+          <div id="preview-foto" class="preview-container">
+            <img id="preview-img" src="" alt="Vista previa">
+            <span>Vista previa</span>
+          </div>
+        </div>
+
+        <div class="form-group"><label>Descripción</label><textarea id="prod-desc" rows="2" required></textarea></div>
+        <div class="form-grid">
+          <div class="form-group"><label>Tallas (coma)</label><input type="text" id="prod-tallas" placeholder="S, M, L"></div>
+          <div class="form-group"><label>Colores (coma)</label><input type="text" id="prod-colores" placeholder="Rojo, Azul"></div>
+        </div>
+        <button type="submit" class="btn-guardar">Guardar Producto</button>
+        <button type="button" id="btn-cancelar" style="display:none; width:100%; margin-top:0.5rem; background:#eee; color:#333; border:none; padding:1rem; border-radius:var(--radio-btn); font-weight:600; cursor:pointer;" onclick="limpiarFormulario()">Cancelar Edición</button>
+      </form>
+    </div>
+
+    <!-- SECCIÓN: LISTA PRODUCTOS -->
+    <div class="panel">
+      <h2>Gestionar Catálogo</h2>
+      <div id="lista-admin" class="lista-productos"></div>
+    </div>
+
+    <!-- SECCIÓN: GESTIONAR CATEGORÍAS (NUEVA) -->
+    <div class="panel">
+      <h2>Gestionar Categorías</h2>
+      <form id="form-categoria" style="display:flex; gap:0.5rem; margin-bottom:1.5rem; flex-wrap:wrap;">
+        <input type="hidden" id="cat-id">
+        <input type="text" id="cat-nombre" placeholder="Nombre (ej. Comida)" required style="flex:1; min-width:150px; padding:0.8rem; border:1px solid #ccc; border-radius:8px;">
+        <input type="text" id="cat-icono" placeholder="Emoji (ej. 🍕)" required style="width:80px; padding:0.8rem; border:1px solid #ccc; border-radius:8px;">
+        <button type="submit" style="padding:0.8rem 1.5rem; background:var(--color-primario); color:#fff; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Guardar</button>
+        <button type="button" id="btn-cancel-cat" style="display:none; padding:0.8rem; background:#eee; color:#333; border:none; border-radius:8px; font-weight:600; cursor:pointer;" onclick="limpiarCatForm()">X</button>
+      </form>
+      <div id="lista-categorias" class="lista-categorias"></div>
+    </div>
+
+  </main>
+
+  <!-- CONEXIÓN A FIREBASE -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjuNIn7LCeP6QFIFU2LuELsU6SbdAGFnk",
+      authDomain: "vetrashop.firebaseapp.com",
+      databaseURL: "https://vetrashop-default-rtdb.firebaseio.com",
+      projectId: "vetrashop",
+      storageBucket: "vetrashop.firebasestorage.app",
+      messagingSenderId: "612577114697",
+      appId: "1:612577114697:web:7a9d1a97ae8f4c750f5d98"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const dbProductosRef = ref(db, 'productos');
+    const dbCategoriasRef = ref(db, 'categorias'); // Nueva referencia para categorías
+
+    const CLAVE_SECRETA = "Vetra2026!"; 
+    const BASE_IMG_URL = "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/";
+
+    let productosAdmin = [];
+    let categoriasAdmin = [];
+    
+    const formProd = document.getElementById("form-producto");
+    const formCat = document.getElementById("form-categoria");
+    const listaProdDiv = document.getElementById("lista-admin");
+    const listaCatDiv = document.getElementById("lista-categorias");
+    const selectCat = document.getElementById("prod-categoria");
+    const inputImgs = document.getElementById("prod-imgs");
+    const selectExt = document.getElementById("prod-extension");
+    const previewCont = document.getElementById("preview-foto");
+    const previewImg = document.getElementById("preview-img");
+
+    window.actualizarPreview = function() {
+      const nombre = inputImgs.value.split(",")[0].trim();
+      if (nombre === "") { previewCont.style.display = "none"; return; }
+      let url = nombre;
+      if (!url.startsWith("http")) {
+        if (!/\.(jpg|jpeg|png|webp|gif)$/i.test(url)) url += selectExt.value;
+        url = BASE_IMG_URL + url;
+      }
+      previewImg.src = url;
+      previewCont.style.display = "flex";
+    };
+    selectExt.addEventListener("change", actualizarPreview);
+
+    window.verificarPassword = function() {
+      if (document.getElementById("input-password").value === CLAVE_SECRETA) {
+        sessionStorage.setItem("vetraAdminAuth", "true");
+        mostrarPanel();
+      } else {
+        document.getElementById("error-login").style.display = "block";
+      }
+    };
+
+    window.cerrarSesion = function() {
+      sessionStorage.removeItem("vetraAdminAuth");
+      location.reload();
+    };
+
+    function mostrarPanel() {
+      document.getElementById("pantalla-login").style.display = "none";
+      document.getElementById("pantalla-admin").style.display = "block";
+      document.getElementById("btn-salir").style.display = "block";
+      
+      // Escuchar Productos
+      onValue(dbProductosRef, (snapshot) => {
+        productosAdmin = snapshot.val() || [];
+        renderizarListaProd();
+      });
+
+      // Escuchar Categorías
+      onValue(dbCategoriasRef, (snapshot) => {
+        categoriasAdmin = snapshot.val() || [];
+        renderizarListaCat();
+        actualizarSelectCategorias();
+      });
+    }
+
+    // ============================================
+    // GESTIÓN DE CATEGORÍAS
+    // ============================================
+    function actualizarSelectCategorias() {
+      selectCat.innerHTML = "";
+      if (categoriasAdmin.length === 0) {
+        selectCat.innerHTML = "<option value=''>Crea una categoría primero</option>";
+        return;
+      }
+      categoriasAdmin.forEach(c => {
+        const option = document.createElement("option");
+        option.value = c.id;
+        option.textContent = c.nombre;
+        selectCat.appendChild(option);
+      });
+    }
+
+    function renderizarListaCat() {
+      listaCatDiv.innerHTML = "";
+      if (categoriasAdmin.length === 0) {
+        listaCatDiv.innerHTML = "<p style='color:#666;'>No hay categorías creadas.</p>";
+        return;
+      }
+      categoriasAdmin.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "item-categoria";
+        div.innerHTML = `
+          <div class="info" style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:1.5rem;">${c.icono}</span>
+            <div>
+              <h3>${c.nombre}</h3>
+              <p>ID: ${c.id}</p>
+            </div>
+          </div>
+          <div class="acciones-producto">
+            <button class="btn-peligro" onclick="eliminarCategoria('${c.id}')">Eliminar</button>
+            <button class="btn-editar" onclick="editarCategoria('${c.id}')">Editar</button>
+          </div>
+        `;
+        listaCatDiv.appendChild(div);
+      });
+    }
+
+    window.eliminarCategoria = function(id) {
+      if (confirm("¿Seguro que quieres eliminar esta categoría? Los productos dentro de ella se ocultarán de la tienda.")) {
+        categoriasAdmin = categoriasAdmin.filter(c => c.id !== id);
+        set(dbCategoriasRef, categoriasAdmin).catch(e => alert(e.message));
+      }
+    };
+
+    window.editarCategoria = function(id) {
+      const c = categoriasAdmin.find(cat => cat.id === id);
+      if (!c) return;
+      document.getElementById("cat-id").value = c.id;
+      document.getElementById("cat-nombre").value = c.nombre;
+      document.getElementById("cat-icono").value = c.icono;
+      document.getElementById("btn-cancel-cat").style.display = "block";
+    };
+
+    window.limpiarCatForm = function() {
+      formCat.reset();
+      document.getElementById("cat-id").value = "";
+      document.getElementById("btn-cancel-cat").style.display = "none";
+    };
+
+    formCat.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const idEditando = document.getElementById("cat-id").value;
+      const nombre = document.getElementById("cat-nombre").value.trim();
+      
+      // El ID se genera en minúsculas y sin espacios (ej: "Comida Rápida" -> "comidarapida")
+      const idGenerado = idEditando ? idEditando : nombre.toLowerCase().replace(/\s+/g, '').normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+      const nuevaCat = {
+        id: idGenerado,
+        nombre: nombre,
+        icono: document.getElementById("cat-icono").value.trim()
+      };
+
+      if (idEditando) {
+        const index = categoriasAdmin.findIndex(c => c.id === idEditando);
+        categoriasAdmin[index] = nuevaCat;
+      } else {
+        // Verificar si ya existe
+        if (categoriasAdmin.some(c => c.id === idGenerado)) return alert("Esa categoría ya existe.");
+        categoriasAdmin.push(nuevaCat);
+      }
+
+      set(dbCategoriasRef, categoriasAdmin).then(() => {
+        limpiarCatForm();
+        alert("Categoría guardada.");
+      }).catch(e => alert(e.message));
+    });
+
+    // ============================================
+    // GESTIÓN DE PRODUCTOS
+    // ============================================
+    function renderizarListaProd() {
+      listaProdDiv.innerHTML = "";
+      if (productosAdmin.length === 0) {
+        listaProdDiv.innerHTML = "<p style='text-align:center; color:#666;'>No hay productos. Agrega el primero.</p>";
+        return;
+      }
+      productosAdmin.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "item-producto";
+        div.innerHTML = `
+          <div class="img-info">
+            <img src="${p.imgs[0]}" alt="${p.nombre}" onerror="this.src='https://via.placeholder.com/70?text=Sin+Foto'">
+            <div class="info">
+              <h3>${p.nombre}</h3>
+              <p>${p.moneda === 'CUP' ? 'CUP ' + p.precio.toFixed(2) : '$' + p.precio.toFixed(2)} — Stock: ${p.stock}</p>
+            </div>
+          </div>
+          <div class="acciones-producto">
+            <button class="btn-peligro" onclick="eliminarProducto(${p.id})">Eliminar</button>
+            <button class="btn-editar" onclick="editarProducto(${p.id})">Editar</button>
+          </div>
+        `;
+        listaProdDiv.appendChild(div);
+      });
+    }
+
+    function guardarEnNube() {
+      set(dbProductosRef, productosAdmin).catch((error) => alert("Error: " + error.message));
+    }
+
+    window.eliminarProducto = function(id) {
+      if (confirm("¿Eliminar producto?")) {
+        productosAdmin = productosAdmin.filter(p => p.id !== id);
+        guardarEnNube();
+      }
+    };
+
+    window.editarProducto = function(id) {
+      const p = productosAdmin.find(prod => prod.id === id);
+      if (!p) return;
+      document.getElementById("titulo-formulario").textContent = "Editar Producto";
+      document.getElementById("prod-id").value = p.id;
+      document.getElementById("prod-nombre").value = p.nombre;
+      document.getElementById("prod-precio").value = p.precio;
+      document.getElementById("prod-moneda").value = p.moneda || "USD"; // Si no tiene, por defecto USD
+      document.getElementById("prod-categoria").value = p.categoria;
+      document.getElementById("prod-stock").value = p.stock;
+      document.getElementById("prod-badge").value = p.badge || "";
+      document.getElementById("prod-disponible").value = p.disponible.toString();
+      
+      let primeraImg = p.imgs[0];
+      let nombreLimpio = primeraImg;
+      let extDetectada = ".jpg";
+
+      if (primeraImg.startsWith(BASE_IMG_URL)) {
+        nombreLimpio = primeraImg.replace(BASE_IMG_URL, "");
+        const partes = nombreLimpio.split(".");
+        if (partes.length > 1) {
+          extDetectada = "." + partes.pop();
+          nombreLimpio = partes.join(".");
+        }
+      }
+      
+      document.getElementById("prod-imgs").value = nombreLimpio;
+      const opcionExt = Array.from(selectExt.options).find(opt => opt.value === extDetectada);
+      selectExt.value = opcionExt ? extDetectada : ".jpg";
+      actualizarPreview();
+
+      document.getElementById("prod-desc").value = p.descripcion;
+      document.getElementById("prod-tallas").value = p.variantes && p.variantes.tallas ? p.variantes.tallas.join(", ") : "";
+      document.getElementById("prod-colores").value = p.variantes && p.variantes.colores ? p.variantes.colores.join(", ") : "";
+      document.getElementById("btn-cancelar").style.display = "block";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.limpiarFormulario = function() {
+      formProd.reset();
+      document.getElementById("prod-id").value = "";
+      document.getElementById("titulo-formulario").textContent = "Añadir Nuevo Producto";
+      document.getElementById("btn-cancelar").style.display = "none";
+      previewCont.style.display = "none";
+      selectExt.value = ".jpg";
+    };
+
+    formProd.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const idEditando = document.getElementById("prod-id").value;
+      
+      const ext = selectExt.value;
+      const nombresImgs = document.getElementById("prod-imgs").value.split(",");
+      
+      const imgsArray = nombresImgs.map(nombre => {
+        let n = nombre.trim();
+        if (n === "") return null;
+        if (n.startsWith("http")) return n;
+        if (!/\.(jpg|jpeg|png|webp|gif)$/i.test(n)) n += ext;
+        return BASE_IMG_URL + n;
+      }).filter(n => n !== null);
+
+      const tallasArray = document.getElementById("prod-tallas").value.split(",").map(t => t.trim()).filter(t => t !== "");
+      const coloresArray = document.getElementById("prod-colores").value.split(",").map(c => c.trim()).filter(c => c !== "");
+
+      const variantes = {};
+      if (tallasArray.length > 0) variantes.tallas = tallasArray;
+      if (coloresArray.length > 0) variantes.colores = coloresArray;
+
+      const nuevoProducto = {
+        id: idEditando ? parseInt(idEditando) : Date.now(),
+        nombre: document.getElementById("prod-nombre").value,
+        precio: parseFloat(document.getElementById("prod-precio").value),
+        moneda: document.getElementById("prod-moneda").value, // GUARDAMOS LA MONEDA
+        categoria: document.getElementById("prod-categoria").value,
+        stock: parseInt(document.getElementById("prod-stock").value),
+        badge: document.getElementById("prod-badge").value.toUpperCase(),
+        disponible: document.getElementById("prod-disponible").value === "true",
+        imgs: imgsArray,
+        descripcion: document.getElementById("prod-desc").value,
+        variantes: Object.keys(variantes).length > 0 ? variantes : null
+      };
+
+      if (idEditando) {
+        const index = productosAdmin.findIndex(p => p.id === parseInt(idEditando));
+        productosAdmin[index] = nuevoProducto;
+      } else {
+        productosAdmin.push(nuevoProducto);
+      }
+
+      guardarEnNube();
+      limpiarFormulario();
+      alert("¡Producto guardado en la nube con éxito!");
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      if (sessionStorage.getItem("vetraAdminAuth") === "true") mostrarPanel();
+    });
+  </script>
+</body>
+</html>
