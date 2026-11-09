@@ -1,36 +1,47 @@
 const WHATSAPP = "5354525901"; 
 
-let categorias = [
-  {
-    "id": "comida",
-    "nombre": "Comida",
-    "icono": "🥡"
-  }
-];
+// Variables globales
+let categorias = [];
+let productos = [];
 
-let productos = [
-  {
-    "id": 1794256973536,
-    "nombre": "Pan",
-    "precio": 40,
-    "moneda": "USD",
-    "categoria": "comida",
-    "stock": 7,
-    "badge": "NUEVO",
-    "disponible": true,
-    "imgs": [
-      "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/Pan.jpg"
-    ],
-    "descripcion": "Pan",
-    "variantes": {
-      "tallas": [
-        "S"
-      ]
+async function cargarDatos() {
+  try {
+    // ⚠️ AQUÍ ESTÁ EL TRUCO: Usamos la URL completa de tu GitHub (raw) para leer el JSON
+    // Esto evita errores de rutas en el navegador.
+    const urlJSON = "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/productos.json";
+    
+    // Le añadimos un pequeño truco de tiempo para que el navegador no guarde en caché datos viejos
+    const respuesta = await fetch(urlJSON + "?v=" + Date.now());
+    
+    if (!respuesta.ok) throw new Error("No se pudo cargar el catálogo de GitHub.");
+    
+    const data = await respuesta.json();
+    
+    categorias = data.categorias || [];
+    productos = data.productos || [];
+    
+    // Avisamos a la tienda que ya puede dibujar
+    document.dispatchEvent(new Event('productosListos'));
+    
+  } catch (error) {
+    console.error("Error al cargar:", error);
+    
+    // Si hay un error, mostramos un cartel en la página para saber qué pasa
+    const contDest = document.getElementById("destacados");
+    if (contDest) {
+        contDest.innerHTML = `<div style="background:#ffdede; color:#c62828; padding:1rem; border-radius:8px; width:100%; grid-column: 1 / -1; font-size:0.9rem;">
+          <strong>Error al cargar los productos:</strong><br>${error.message}
+        </div>`;
     }
   }
-];
+}
 
+// Iniciamos la carga
+cargarDatos();
+
+// ============================================
 // HELPERS
+// ============================================
 function formatearPrecio(p) {
   if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
   return `$${p.precio.toFixed(2)} USD`;
@@ -65,5 +76,3 @@ function toggleFavorito(id) {
   else favs.push(id);
   guardarFavoritos(favs);
 }
-
-document.dispatchEvent(new Event('productosListos'));
