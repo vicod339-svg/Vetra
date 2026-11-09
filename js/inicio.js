@@ -1,6 +1,8 @@
-document.addEventListener("productosListos", () => {
-  // 1. Categorías (Solo las que existen en la base de datos)
+// Función principal que se ejecuta cuando los datos llegan de Firebase
+function renderizarInicio() {
+  // 1. Categorías
   const contCat = document.getElementById("categorias");
+  if (!contCat) return;
   contCat.innerHTML = ""; 
   
   categorias.forEach(cat => {
@@ -11,8 +13,9 @@ document.addEventListener("productosListos", () => {
     contCat.appendChild(a);
   });
 
-  // 2. Destacados (Filtrando que la categoría exista)
+  // 2. Destacados
   const contDest = document.getElementById("destacados");
+  if (!contDest) return;
   contDest.innerHTML = ""; 
   
   const idsCategoriasActivas = categorias.map(c => c.id);
@@ -23,6 +26,10 @@ document.addEventListener("productosListos", () => {
     .slice(0, 4);
     
   const favoritosActuales = obtenerFavoritos();
+
+  if (destacados.length === 0) {
+    contDest.innerHTML = "<p style='text-align:center; width:100%; grid-column: 1/-1; padding: 2rem; color: #666;'>Pronto añadiremos nuevos productos destacados.</p>";
+  }
 
   destacados.forEach(p => {
     const esFavorito = favoritosActuales.includes(p.id);
@@ -57,4 +64,11 @@ document.addEventListener("productosListos", () => {
   if (typeof aplicarAnimacionesScroll === "function") {
       aplicarAnimacionesScroll();
   }
-});
+}
+
+// Escuchamos si los datos ya están listos
+document.addEventListener("productosListos", renderizarInicio);
+// Por si acaso los datos cargan muy rápido y el evento ya pasó antes de que esta página estuviera lista
+if (productos && productos.length > 0) {
+  renderizarInicio();
+}
