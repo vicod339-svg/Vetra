@@ -1,37 +1,46 @@
-
 const WHATSAPP = "5354525901"; 
 
-let categorias = [
-  {
-    "id": "comida",
-    "nombre": "Comido",
-    "icono": "🇨🇺"
-  }
-];
+// Variables globales vacías que se llenarán desde el JSON
+let categorias = [];
+let productos = [];
 
-let productos = [
-  {
-    "id": 1794256712427,
-    "nombre": "Pan",
-    "precio": 40,
-    "moneda": "USD",
-    "categoria": "comida",
-    "stock": 7,
-    "badge": "NEW",
-    "disponible": true,
-    "imgs": [
-      "https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/Pan.jpg"
-    ],
-    "descripcion": "Jwjjw",
-    "variantes": {
-      "tallas": [
-        "L"
-      ]
+// Función que descarga los datos del archivo JSON de tu GitHub
+async function cargarDatos() {
+  try {
+    // Hacemos la petición al archivo productos.json en tu repositorio
+    // Nota: como el archivo está en la misma raíz, basta con poner el nombre.
+    // Usamos un parámetro de tiempo al final (?) para que el navegador no guarde en caché una versión vieja.
+    const respuesta = await fetch('productos.json?v=' + Date.now());
+    
+    if (!respuesta.ok) throw new Error("No se pudo cargar el catálogo.");
+    
+    const data = await respuesta.json();
+    
+    categorias = data.categorias || [];
+    productos = data.productos || [];
+    
+    // Avisamos a la tienda que ya puede dibujar
+    document.dispatchEvent(new Event('productosListos'));
+    
+  } catch (error) {
+    console.error("Error al cargar el catálogo:", error);
+    
+    // Si falla, mostramos un aviso en la pantalla para saber qué pasa
+    const contDest = document.getElementById("destacados");
+    if (contDest) {
+        contDest.innerHTML = `<div style="background:#ffdede; color:#c62828; padding:1rem; border-radius:8px; width:100%; grid-column: 1 / -1; font-size:0.9rem;">
+          <strong>Error al cargar el catálogo:</strong><br>${error.message}
+        </div>`;
     }
   }
-];
+}
 
-// Helpers
+// Iniciamos la carga
+cargarDatos();
+
+// ============================================
+// HELPERS (Formato de precios y WhatsApp)
+// ============================================
 function formatearPrecio(p) {
   if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
   return `$${p.precio.toFixed(2)} USD`;
@@ -66,5 +75,3 @@ function toggleFavorito(id) {
   else favs.push(id);
   guardarFavoritos(favs);
 }
-
-document.dispatchEvent(new Event('productosListos'));
