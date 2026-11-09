@@ -1,5 +1,6 @@
 const WHATSAPP = "5354525901"; 
 
+// Categorías por defecto (solo se usan si la base de datos está vacía)
 let categorias = [
   { id: "ropa", nombre: "Ropa", icono: "👕" },
   { id: "belleza", nombre: "Belleza", icono: "💄" },
@@ -25,16 +26,23 @@ async function cargarDatos() {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
+  // Escuchar Categorías
   const catRef = ref(db, 'categorias');
   onValue(catRef, (snapshot) => {
     const data = snapshot.val();
-    if (data) categorias = Object.values(data); 
+    // CONVERSIÓN CLAVE PARA GITHUB: Si hay datos, los convertimos en un Array real
+    if (data) {
+      categorias = Array.isArray(data) ? data : Object.values(data); 
+    }
     
+    // Escuchar Productos (dentro de categorías para asegurar el orden)
     const prodRef = ref(db, 'productos');
     onValue(prodRef, (snapshotProd) => {
       const dataProd = snapshotProd.val();
-      productos = dataProd ? Object.values(dataProd) : [];
+      // CONVERSIÓN CLAVE: Convertimos los productos a un Array real
+      productos = dataProd ? (Array.isArray(dataProd) ? dataProd : Object.values(dataProd)) : [];
       
+      // Disparamos el evento UNA SOLA VEZ, cuando todo está listo
       document.dispatchEvent(new Event('productosListos'));
     });
   });
@@ -42,8 +50,13 @@ async function cargarDatos() {
 
 cargarDatos();
 
+// ============================================
+// FORMATEO DE PRECIOS 
+// ============================================
 function formatearPrecio(p) {
-  if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
+  if (p.moneda === "CUP") {
+    return `$${p.precio.toFixed(2)} CUP`;
+  }
   return `$${p.precio.toFixed(2)} USD`;
 }
 
