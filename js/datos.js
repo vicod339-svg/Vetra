@@ -1,6 +1,5 @@
 const WHATSAPP = "5354525901"; 
 
-// Categorías por defecto (solo se usan si la base de datos está vacía)
 let categorias = [
   { id: "ropa", nombre: "Ropa", icono: "👕" },
   { id: "belleza", nombre: "Belleza", icono: "💄" },
@@ -26,34 +25,28 @@ async function cargarDatos() {
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
 
-  // Escuchar Categorías
+  // 1. Cargar categorías
   const catRef = ref(db, 'categorias');
   onValue(catRef, (snapshot) => {
     const data = snapshot.val();
     if (data) categorias = data;
-    document.dispatchEvent(new Event('productosListos'));
-  });
-
-  // Escuchar Productos
-  const prodRef = ref(db, 'productos');
-  onValue(prodRef, (snapshot) => {
-    const data = snapshot.val();
-    productos = data ? data : [];
-    document.dispatchEvent(new Event('productosListos'));
+    
+    // 2. Cargar productos
+    const prodRef = ref(db, 'productos');
+    onValue(prodRef, (snapshotProd) => {
+      const dataProd = snapshotProd.val();
+      productos = dataProd ? dataProd : [];
+      
+      // 3. Avisar a la página que ya puede dibujar
+      document.dispatchEvent(new Event('productosListos'));
+    });
   });
 }
 
 cargarDatos();
 
-// ============================================
-// FORMATEO DE PRECIOS 
-// ============================================
 function formatearPrecio(p) {
-  // Si el producto tiene moneda CUP, mostramos $150.00 CUP
-  if (p.moneda === "CUP") {
-    return `$${p.precio.toFixed(2)} CUP`;
-  }
-  // Si es USD (o no tiene moneda asignada), mostramos $15.00 USD
+  if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
   return `$${p.precio.toFixed(2)} USD`;
 }
 
