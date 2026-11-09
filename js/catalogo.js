@@ -1,4 +1,4 @@
-function renderizarCatalogo() {
+document.addEventListener("productosListos", () => {
   const params = new URLSearchParams(location.search);
   const catActiva = params.get("cat") || "todas";
   let textoBusqueda = "";
@@ -6,8 +6,8 @@ function renderizarCatalogo() {
 
   const filtros = document.getElementById("filtros");
   if (!filtros) return;
-  
   filtros.innerHTML = ""; 
+  
   const todas = [{ id: "todas", nombre: "Todas" }, ...categorias];
 
   todas.forEach(cat => {
@@ -102,7 +102,4 @@ function renderizarCatalogo() {
   });
 
   pintarProductos();
-}
-
-// ESTO ES LO QUE HACE QUE FUNCIONE:
-document.addEventListener("productosListos", renderizarCatalogo);
+});
