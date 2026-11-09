@@ -1,30 +1,17 @@
+
 const WHATSAPP = "5354525901"; 
 
 let categorias = [
-  { id: "ropa", nombre: "Ropa", icono: "👕" },
-  { id: "belleza", nombre: "Belleza", icono: "💄" },
-  { id: "electrodomesticos", nombre: "Electrodomésticos", icono: "🔌" }
-];
-
-let productos = [
   {
-    "id": 1,
-    "nombre": "Producto de Prueba",
-    "precio": 10.00,
-    "moneda": "USD",
-    "categoria": "ropa",
-    "stock": 5,
-    "badge": "NUEVO",
-    "disponible": true,
-    "imgs": ["https://raw.githubusercontent.com/vicod339-svg/Vetra/main/img/camiseta-1.jpg"],
-    "descripcion": "Este es un producto de prueba para verificar que todo funciona.",
-    "variantes": { "tallas": ["S", "M"], "colores": ["Negro"] }
+    "id": "comida",
+    "nombre": "Comida",
+    "icono": "🇨🇺"
   }
 ];
 
-// ============================================
-// HELPERS (No tocar)
-// ============================================
+let productos = [];
+
+// Helpers
 function formatearPrecio(p) {
   if (p.moneda === "CUP") return `$${p.precio.toFixed(2)} CUP`;
   return `$${p.precio.toFixed(2)} USD`;
