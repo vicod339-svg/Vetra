@@ -3,7 +3,6 @@ document.addEventListener("productosListos", () => {
   const idsFavoritos = obtenerFavoritos();
   const idsCategoriasActivas = categorias.map(c => c.id);
   
-  // Filtramos: que esté en favoritos y que su categoría siga existiendo
   const productosFavoritos = productos.filter(p => 
     idsFavoritos.includes(p.id) && idsCategoriasActivas.includes(p.categoria)
   );
