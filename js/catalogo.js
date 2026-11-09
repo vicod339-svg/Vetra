@@ -1,13 +1,13 @@
-document.addEventListener("productosListos", () => {
+function renderizarCatalogo() {
   const params = new URLSearchParams(location.search);
   const catActiva = params.get("cat") || "todas";
   let textoBusqueda = "";
   let ordenActivo = "recientes";
 
-  // Filtros por categoría (generados dinámicamente)
   const filtros = document.getElementById("filtros");
-  filtros.innerHTML = ""; 
+  if (!filtros) return;
   
+  filtros.innerHTML = ""; 
   const todas = [{ id: "todas", nombre: "Todas" }, ...categorias];
 
   todas.forEach(cat => {
@@ -25,29 +25,23 @@ document.addEventListener("productosListos", () => {
   const contenedor = document.getElementById("catalogo");
   const contador = document.getElementById("contador-resultados");
 
-  function renderizar() {
+  function pintarProductos() {
     const idsCategoriasActivas = categorias.map(c => c.id);
-    
-    // 1. Base: Productos que pertenecen a categorías activas
     let lista = productos.filter(p => idsCategoriasActivas.includes(p.categoria));
 
-    // 2. Filtrar por categoría seleccionada
     if (catActiva !== "todas") {
       lista = lista.filter(p => p.categoria === catActiva);
     }
 
-    // 3. Filtrar por búsqueda
     if (textoBusqueda.trim() !== "") {
       const q = normalizar(textoBusqueda.trim());
       lista = lista.filter(p => normalizar(p.nombre).includes(q));
     }
 
-    // 4. Ordenar
     if (ordenActivo === "precio-asc") lista.sort((a, b) => a.precio - b.precio);
     else if (ordenActivo === "precio-desc") lista.sort((a, b) => b.precio - a.precio);
     else if (ordenActivo === "nombre") lista.sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    // 5. Contador
     if (textoBusqueda.trim() !== "") {
       contador.textContent = `${lista.length} resultado${lista.length === 1 ? "" : "s"} para "${textoBusqueda}"`;
     } else {
@@ -58,7 +52,7 @@ document.addEventListener("productosListos", () => {
     const favoritosActuales = obtenerFavoritos();
 
     if (lista.length === 0) {
-      contenedor.innerHTML = `<p class="sin-resultados">No encontramos productos que coincidan.<br>Prueba con otra palabra o <a href="productos.html">ver todo el catálogo</a>.</p>`;
+      contenedor.innerHTML = `<p class="sin-resultados">No hay productos disponibles en esta categoría todavía.</p>`;
       return;
     }
 
@@ -88,7 +82,7 @@ document.addEventListener("productosListos", () => {
         e.preventDefault(); 
         const id = parseInt(e.target.getAttribute("data-id"));
         toggleFavorito(id);
-        renderizar(); 
+        pintarProductos(); 
       });
     });
 
@@ -99,13 +93,18 @@ document.addEventListener("productosListos", () => {
 
   document.getElementById("buscador").addEventListener("input", (e) => {
     textoBusqueda = e.target.value;
-    renderizar();
+    pintarProductos();
   });
 
   document.getElementById("orden").addEventListener("change", (e) => {
     ordenActivo = e.target.value;
-    renderizar();
+    pintarProductos();
   });
 
-  renderizar();
-});
+  pintarProductos();
+}
+
+document.addEventListener("productosListos", renderizarCatalogo);
+if (productos && productos.length > 0) {
+  renderizarCatalogo();
+}
